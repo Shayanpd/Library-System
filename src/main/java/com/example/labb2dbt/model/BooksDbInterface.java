@@ -17,13 +17,16 @@ import java.util.List;
  * @author anderslm@kth.se
  */
 public interface BooksDbInterface {
-    
+
     /**
-     * Connect to the database.
-     * @param database, username, password
-     * @return true on successful connection.
+     * Establishes a connection to a MongoDB server and database.
+     *
+     * @param mongoDbServer The address or connection string of the MongoDB server.
+     * @param mongoDatabase The name of the MongoDB database to connect to.
+     * @return {@code true} if the connection is successfully established, {@code false} otherwise.
+     * @throws BooksDbException If an error occurs while attempting to connect to the MongoDB server or database.
      */
-    boolean connect(String database, String username, String password) throws BooksDbException;
+    boolean connect(String mongoDbServer, String mongoDatabase) throws BooksDbException;
 
     /**
      * Disconnects from the database.

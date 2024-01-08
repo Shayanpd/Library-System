@@ -1,17 +1,37 @@
 package com.example.labb2dbt.model;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
+import com.mongodb.client.MongoDatabase;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class BooksDbImpl implements BooksDbInterface{
+    public MongoClient mongoClient;
+    public MongoDatabase mongoDatabase;
     @Override
-    public boolean connect(String database, String username, String password) throws BooksDbException {
-        return false;
+    public boolean connect(String mongoDbServer, String mongoDatabase) throws BooksDbException {
+        // Creating a Mongo client
+        //mongodb://localhost:27017/book_database
+        try {
+            this.mongoClient = MongoClients.create(mongoDbServer);
+            this.mongoDatabase = mongoClient.getDatabase(mongoDatabase);
+
+            return true;
+        } catch (Exception e){
+            throw new BooksDbException("Could not connect to MongoDB", e);
+        }
     }
 
     @Override
     public void disconnect() throws BooksDbException {
-
+        try {
+            if (mongoClient != null) {
+                mongoClient.close();
+            }
+        } catch (Exception e) {
+            throw new BooksDbException("Error closing MongoDB connection", e);
+        }
     }
 
     @Override

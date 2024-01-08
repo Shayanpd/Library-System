@@ -15,6 +15,7 @@ import static javafx.scene.control.Alert.AlertType.*;
  * @author anderslm@kth.se
  */
 public class Controller {
+
     private final BooksPane booksView; // view
     BooksDbInterface booksDb; // model
 
@@ -74,7 +75,7 @@ public class Controller {
     }
 
     public boolean connectToDatabase() throws BooksDbException {
-        return booksDb.connect("jdbc:mysql://localhost:3306/book_database", "user", "user"); //&gP3JmX*1h5mV^Ha#UC%6c daniels lösen
+        return booksDb.connect("mongodb://localhost:27017", "book_database");
     }
     public void disconnectFromDatabase() throws BooksDbException{
         booksDb.disconnect();

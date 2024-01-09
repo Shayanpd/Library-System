@@ -51,7 +51,18 @@ public class BooksDbImpl implements BooksDbInterface{
 
     @Override
     public void addBook(Book book) throws BooksDbException {
+        Document doc = new Document();
+        doc.put("title", book.getTitle());
+        doc.put("isbn", book.getIsbn());
+        doc.put("dateOfRelease", book.getPublished());
+        doc.put("description", book.getStoryLine());
+        doc.put("rating", book.getRating());
+        //doc.put("genres", book.getGenres());
+        //doc.put("authors", book.getAuthors());
 
+        this.booksCollection.insertOne(doc);
+
+        System.out.println("insert success?");
     }
 
     @Override
@@ -90,50 +101,19 @@ public class BooksDbImpl implements BooksDbInterface{
     }
 
     @Override
-    public List<Book> searchBooksByTitle(String searchTitle) throws BooksDbException {
+    public List<Book> searchBooksByTitle(String searchTitle) throws BooksDbException { //work in progress
         List<Book> result = new ArrayList<>();
         searchTitle = searchTitle.toLowerCase();
+        Document doc;
+        this.booksCollection.find(Filters.eq("title", searchTitle));
 
-        Document query = new Document("title", new Document("$regex", searchTitle).append("$options", "i"));
 
-        try (MongoCursor<Document> cursor = booksCollection.find(query).iterator()) {
-            while (cursor.hasNext()) {
-                Document doc = cursor.next();
-                int bookID = doc.getInteger("bookID");
-                String isbn = doc.getString("isbn");
-                String title = doc.getString("title");
-                LocalDate publishedDate = doc.getDate("dateOfRelease").toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-                String storyLine = doc.getString("description");
-                int rating = doc.getInteger("rating");
+        System.out.println("res " + result.toString());
 
-                // Handling genres array
-                List<Genre> genres = new ArrayList<>();
-                List<Document> genresDocs = (List<Document>) doc.get("genres");
-                for (Document genreDoc : genresDocs) {
-                    String genreName = genreDoc.getString("name");
-                    genres.add(new Genre(genreName));
-                }
 
-                // Handling authors array (assuming an Author class with a name field)
-                List<Author> authors = new ArrayList<>();
-                List<Document> authorsDocs = (List<Document>) doc.get("authors");
-                for (Document authorDoc : authorsDocs) {
-                    String authorName = authorDoc.getString("name");
-                    authors.add(new Author(authorName, LocalDate.now()));
-                }
 
-                Book book = new Book(bookID, isbn, title, publishedDate);
-                book.setStoryLine(storyLine);
-                book.setRating(rating);
-                book.setGenres((ArrayList<Genre>) genres);
-                book.setAuthors((ArrayList<Author>) authors);
 
-                result.add(book);
-            }
-        } catch (Exception e) {
-            throw new BooksDbException("Error searching books by title", e);
-        }
-        System.out.println(result.toString()); //debugging
+
         return result;
     }
 

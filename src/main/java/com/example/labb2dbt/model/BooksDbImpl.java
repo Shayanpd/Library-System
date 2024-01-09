@@ -1,11 +1,13 @@
 package com.example.labb2dbt.model;
 import com.mongodb.MongoException;
 import com.mongodb.client.*;
+import com.mongodb.client.model.Filters;
 import org.bson.Document;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class BooksDbImpl implements BooksDbInterface{
@@ -30,7 +32,6 @@ public class BooksDbImpl implements BooksDbInterface{
             this.genresCollection = this.mongoDatabase.getCollection("genres");
 
             System.out.println("Connected successfully to database: " + dbName);
-
 
             return true;
         } catch (MongoException e) {
@@ -57,12 +58,30 @@ public class BooksDbImpl implements BooksDbInterface{
         doc.put("dateOfRelease", book.getPublished());
         doc.put("description", book.getStoryLine());
         doc.put("rating", book.getRating());
-        //doc.put("genres", book.getGenres());
+
+        List<Document> genreList = new ArrayList<>();
+
+        for (Genre g : book.getGenres()){
+            Document genreDoc = new Document();
+            genreDoc.put("name", g.getGenreName());
+            genreList.add(genreDoc);
+        }
+
+        List<Author> authorList = new ArrayList<>();
+
+        for (Author a : book.getAuthors()){
+            Document authorDoc = new Document();
+            authorDoc.put("name", a.getName());
+            authorDoc.put("dateOfBirth", a.getBirthDate());
+            authorList.add(a);
+        }
+
+        doc.put("genres", genreList);
         //doc.put("authors", book.getAuthors());
 
         this.booksCollection.insertOne(doc);
 
-        System.out.println("insert success?");
+        System.out.println("insert success");
     }
 
     @Override
@@ -133,12 +152,26 @@ public class BooksDbImpl implements BooksDbInterface{
     }
 
     @Override
-    public List<Author> getAllAuthors() throws BooksDbException {
-        return null;
+    public List<Author> getAllAuthors() throws BooksDbException { //only gets the first author atm
+        Document doc = this.authorsCollection.find().first();
+        if (doc == null) System.out.println("doc is null");
+        String name = doc.getString("name");
+        Date dateOfBirth = doc.getDate("dateOfBirth");
+        LocalDate convertedDate = convertToLocalDateViaInstant(dateOfBirth);
+
+        Author a = new Author(name, convertedDate);
+        List<Author> result = new ArrayList<>();
+        result.add(a);
+        return result;
     }
 
     @Override
     public List<Genre> getAllGenres() throws BooksDbException {
         return null;
+    }
+    public LocalDate convertToLocalDateViaInstant(Date dateToConvert) { //convert Date to LocalDate, maybe need later
+        return dateToConvert.toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
     }
 }

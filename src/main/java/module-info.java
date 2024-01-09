@@ -10,4 +10,5 @@ module com.example.labb2dbt {
 
     opens com.example.labb2dbt to javafx.fxml;
     exports com.example.labb2dbt;
+    exports com.example.labb2dbt.view;
 }

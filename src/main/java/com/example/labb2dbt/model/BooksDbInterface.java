@@ -26,7 +26,7 @@ public interface BooksDbInterface {
      * @return {@code true} if the connection is successfully established, {@code false} otherwise.
      * @throws BooksDbException If an error occurs while attempting to connect to the MongoDB server or database.
      */
-    boolean connect(String mongoDbServer, String mongoDatabase) throws BooksDbException;
+    boolean connect(String database, String username, String password) throws BooksDbException;
 
     /**
      * Disconnects from the database.

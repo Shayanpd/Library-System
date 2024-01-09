@@ -1,4 +1,5 @@
 package com.example.labb2dbt.model;
+import com.mongodb.MongoException;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
@@ -10,16 +11,17 @@ public class BooksDbImpl implements BooksDbInterface{
     public MongoClient mongoClient;
     public MongoDatabase mongoDatabase;
     @Override
-    public boolean connect(String mongoDbServer, String mongoDatabase) throws BooksDbException {
+    public boolean connect(String dbName, String username, String password) throws BooksDbException{
         // Creating a Mongo client
         //mongodb://localhost:27017/book_database
         try {
-            this.mongoClient = MongoClients.create(mongoDbServer);
-            this.mongoDatabase = mongoClient.getDatabase(mongoDatabase);
-
+            String uri = "mongodb+srv://" + username + ":" + password + "@labb2dbt.qej8vzl.mongodb.net/?retryWrites=true&w=majority";
+            mongoClient = MongoClients.create(uri);
+            mongoDatabase = mongoClient.getDatabase(dbName);
+            System.out.println("Connected successfully to database: " + dbName);
             return true;
-        } catch (Exception e){
-            throw new BooksDbException("Could not connect to MongoDB", e);
+        } catch (MongoException e) {
+            throw new BooksDbException("Could not connect to MongoDB database", e);
         }
     }
 

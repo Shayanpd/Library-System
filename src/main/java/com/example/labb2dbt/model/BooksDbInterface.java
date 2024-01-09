@@ -21,8 +21,9 @@ public interface BooksDbInterface {
     /**
      * Establishes a connection to a MongoDB server and database.
      *
-     * @param mongoDbServer The address or connection string of the MongoDB server.
-     * @param mongoDatabase The name of the MongoDB database to connect to.
+     * @param database The database to connect to.
+     * @param username The name of the MongoDB user.
+     * @param password the password of the user.
      * @return {@code true} if the connection is successfully established, {@code false} otherwise.
      * @throws BooksDbException If an error occurs while attempting to connect to the MongoDB server or database.
      */
@@ -75,16 +76,6 @@ public interface BooksDbInterface {
      * @see Book
      */
     void updateBookRating(Book book, int newRating) throws BooksDbException;
-
-    /**
-     * Retrieves a list of all books from the database.
-     *
-     * @return An ArrayList of Book objects representing all books in the database.
-     * @throws BooksDbException If an error occurs while retrieving books from the database.
-     *                         This may include SQL exceptions or other issues related to database access.
-     * @see Book
-     */
-    ArrayList<Book> getBooksFromDB() throws BooksDbException;
 
     /**
      * Searches for books by author name.

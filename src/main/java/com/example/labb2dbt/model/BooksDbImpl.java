@@ -104,10 +104,6 @@ public class BooksDbImpl implements BooksDbInterface{
 
     }
 
-    @Override
-    public ArrayList<Book> getBooksFromDB() throws BooksDbException {
-        return null;
-    }
 
     @Override
     public List<Book> searchBooksByAuthor(String author) throws BooksDbException {
@@ -120,21 +116,53 @@ public class BooksDbImpl implements BooksDbInterface{
     }
 
     @Override
-    public List<Book> searchBooksByTitle(String searchTitle) throws BooksDbException { //work in progress
+    public List<Book> searchBooksByTitle(String searchTitle) throws BooksDbException {
+        if (mongoDatabase == null) {
+            throw new BooksDbException("Not connected to the database");
+        }
+
         List<Book> result = new ArrayList<>();
-        searchTitle = searchTitle.toLowerCase();
-        Document doc;
-        this.booksCollection.find(Filters.eq("title", searchTitle));
 
+        try {
+            // Using regex to perform a case-insensitive search for the title
+            FindIterable<Document> foundBooks = booksCollection.find(Filters.regex("title", searchTitle, "i"));
 
-        System.out.println("res " + result.toString());
+            for (Document doc : foundBooks) {
+                String title = doc.getString("title");
+                String isbn = doc.getString("isbn");
+                Date dateOfRelease = doc.getDate("dateOfRelease");
+                String description = doc.getString("description");
+                int rating = doc.getInteger("rating", 0);
 
+                // Convert Date to LocalDate
+                LocalDate localDateOfRelease = dateOfRelease.toInstant()
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalDate();
 
+                Book book = new Book(isbn, title, localDateOfRelease);
+                book.setStoryLine(description);
+                book.setRating(rating);
 
+                // Process genres if they are present in the document
+                List<Document> genreDocs = (List<Document>) doc.get("genres");
+                if (genreDocs != null) {
+                    ArrayList<Genre> genres = new ArrayList<>();
+                    for (Document genreDoc : genreDocs) {
+                        genres.add(new Genre(genreDoc.getString("name")));
+                    }
+                    book.setGenres(genres);
+                }
 
+                result.add(book);
+            }
+        } catch (MongoException e) {
+            throw new BooksDbException("Error searching books by title", e);
+        }
 
         return result;
     }
+
+
 
     @Override
     public List<Book> searchBooksByISBN(String isbn) throws BooksDbException {

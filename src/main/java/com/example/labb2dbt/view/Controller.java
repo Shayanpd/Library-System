@@ -75,7 +75,7 @@ public class Controller {
     }
 
     public boolean connectToDatabase() throws BooksDbException {
-        return booksDb.connect("Labb2DBT", "spaydar01", "Aa1sLwVNTwqPfXFy"); //prova använda lösenordet för att connecta till cloud mongoDB
+        return booksDb.connect("Labb2DBT", "spaydar01", "Aa1sLwVNTwqPfXFy"); //"daniel", "MTzK4KGuHrcH63Bs"
     }
     public void disconnectFromDatabase() throws BooksDbException{
         booksDb.disconnect();

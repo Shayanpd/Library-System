@@ -127,34 +127,7 @@ public class BooksDbImpl implements BooksDbInterface{
             // Using regex to perform a case-insensitive search for the title
             FindIterable<Document> foundBooks = booksCollection.find(Filters.regex("title", searchTitle, "i"));
 
-            for (Document doc : foundBooks) {
-                String title = doc.getString("title");
-                String isbn = doc.getString("isbn");
-                Date dateOfRelease = doc.getDate("dateOfRelease");
-                String description = doc.getString("description");
-                int rating = doc.getInteger("rating", 0);
-
-                // Convert Date to LocalDate
-                LocalDate localDateOfRelease = dateOfRelease.toInstant()
-                        .atZone(ZoneId.systemDefault())
-                        .toLocalDate();
-
-                Book book = new Book(isbn, title, localDateOfRelease);
-                book.setStoryLine(description);
-                book.setRating(rating);
-
-                // Process genres if they are present in the document
-                List<Document> genreDocs = (List<Document>) doc.get("genres");
-                if (genreDocs != null) {
-                    ArrayList<Genre> genres = new ArrayList<>();
-                    for (Document genreDoc : genreDocs) {
-                        genres.add(new Genre(genreDoc.getString("name")));
-                    }
-                    book.setGenres(genres);
-                }
-
-                result.add(book);
-            }
+            getBooksFromDb(result, foundBooks);
         } catch (MongoException e) {
             throw new BooksDbException("Error searching books by title", e);
         }
@@ -165,13 +138,78 @@ public class BooksDbImpl implements BooksDbInterface{
 
 
     @Override
-    public List<Book> searchBooksByISBN(String isbn) throws BooksDbException {
-        return null;
+    public List<Book> searchBooksByISBN(String isbnString) throws BooksDbException {
+        if (mongoDatabase == null) {
+            throw new BooksDbException("Not connected to the database");
+        }
+            List<Book> result = new ArrayList<>();
+
+            try {
+                // Using regex to perform a case-insensitive search for the title
+                FindIterable<Document> foundBooks = booksCollection.find(Filters.regex("isbn", isbnString, "i"));
+
+                getBooksFromDb(result, foundBooks);
+            } catch (MongoException e) {
+                throw new BooksDbException("Error searching books by ISBN", e);
+            }
+
+            return result;
+
+    }
+
+    private void getBooksFromDb(List<Book> result, FindIterable<Document> foundBooks) {
+        for (Document doc : foundBooks) {
+            String title = doc.getString("title");
+            String isbn = doc.getString("isbn");
+            Date dateOfRelease = doc.getDate("dateOfRelease");
+            String description = doc.getString("description");
+            int rating = doc.getInteger("rating", 0);
+
+            // Convert Date to LocalDate
+            LocalDate localDateOfRelease = dateOfRelease.toInstant()
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDate();
+
+            Book book = new Book(isbn, title, localDateOfRelease);
+            book.setStoryLine(description);
+            book.setRating(rating);
+
+            // Process genres if they are present in the document
+            List<Document> genreDocs = (List<Document>) doc.get("genres");
+            if (genreDocs != null) {
+                ArrayList<Genre> genres = new ArrayList<>();
+                for (Document genreDoc : genreDocs) {
+                    genres.add(new Genre(genreDoc.getString("name")));
+                }
+                book.setGenres(genres);
+            }
+
+            result.add(book);
+        }
     }
 
     @Override
-    public List<Book> searchBooksByRating(String rating) throws BooksDbException {
-        return null;
+    public List<Book> searchBooksByRating(String ratingString) throws BooksDbException {
+        if (mongoDatabase == null) {
+            throw new BooksDbException("Not connected to the database");
+        }
+        List<Book> result = new ArrayList<>();
+
+        try {
+            // Convert the rating string to an integer
+            int rating = Integer.parseInt(ratingString);
+
+            // Find books with the specified rating
+            FindIterable<Document> foundBooks = booksCollection.find(Filters.eq("rating", rating));
+
+            getBooksFromDb(result, foundBooks);
+        } catch (NumberFormatException e) {
+            throw new BooksDbException("Invalid rating format: " + ratingString, e);
+        } catch (MongoException e) {
+            throw new BooksDbException("Error searching books by rating", e);
+        }
+
+        return result;
     }
 
     @Override

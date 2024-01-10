@@ -15,7 +15,10 @@ import java.util.Date;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
+/**
+ * Implementation of the BooksDbInterface that interacts with a MongoDB database.
+ * This class provides methods to connect, disconnect, and perform various operations on books, authors, and genres.
+ */
 public class BooksDbImpl implements BooksDbInterface{
     public MongoClient mongoClient;
     public MongoDatabase mongoDatabase;
@@ -24,7 +27,15 @@ public class BooksDbImpl implements BooksDbInterface{
     private MongoCollection<Document> authorsCollection;
     private MongoCollection<Document> genresCollection;
 
-
+    /**
+     * Connects to the MongoDB database using the provided credentials and database name.
+     *
+     * @param dbName    The name of the MongoDB database to connect to.
+     * @param username  The username for authentication.
+     * @param password  The password for authentication.
+     * @return true if the connection is successful, false otherwise.
+     * @throws BooksDbException If there are issues with the connection to the MongoDB database.
+     */
     @Override
     public boolean connect(String dbName, String username, String password) throws BooksDbException{
 
@@ -44,7 +55,11 @@ public class BooksDbImpl implements BooksDbInterface{
             throw new BooksDbException("Could not connect to MongoDB database", e);
         }
     }
-
+    /**
+     * Disconnects from the MongoDB database by closing the MongoClient.
+     *
+     * @throws BooksDbException If there are issues with closing the MongoDB connection.
+     */
     @Override
     public void disconnect() throws BooksDbException {
         try {
@@ -55,9 +70,14 @@ public class BooksDbImpl implements BooksDbInterface{
             throw new BooksDbException("Error closing MongoDB connection", e);
         }
     }
-
+    /**
+     * Adds a new book to the MongoDB database.
+     *
+     * @param book The Book object representing the book to be added.
+     * @throws BooksDbException If there are issues with the database connection or the insertion operation.
+     */
     @Override
-    public void addBook(Book book) throws BooksDbException {//TODO: fix authors(does not work currently)
+    public void addBook(Book book) throws BooksDbException {
         Document doc = new Document();
         doc.put("title", book.getTitle());
         doc.put("isbn", book.getIsbn());
@@ -89,7 +109,12 @@ public class BooksDbImpl implements BooksDbInterface{
 
         System.out.println("insert success");
     }
-
+    /**
+     * Adds a new author to the MongoDB database.
+     *
+     * @param author The Author object representing the author to be added.
+     * @throws BooksDbException If there are issues with the database connection or the insertion operation.
+     */
     @Override
     public void addAuthor(Author author) throws BooksDbException {
         if (mongoDatabase == null) {
@@ -107,7 +132,13 @@ public class BooksDbImpl implements BooksDbInterface{
         }
     }
 
-
+    /**
+     * Updates a book in the MongoDB database based on its ISBN.
+     *
+     * @param isbn The ISBN of the book to be updated.
+     * @param book The Book object containing the new values for the book.
+     * @throws BooksDbException If there are issues with the database connection or the update operation.
+     */
     @Override
     public void updateBook(String isbn, Book book) throws BooksDbException {
         if (mongoDatabase == null) {
@@ -143,7 +174,12 @@ public class BooksDbImpl implements BooksDbInterface{
         }
     }
 
-
+    /**
+     * Deletes a book from the MongoDB database based on its ISBN.
+     *
+     * @param book The Book object representing the book to be deleted.
+     * @throws BooksDbException If there are issues with the database connection or the deletion operation.
+     */
     @Override
     public void deleteBook(Book book) throws BooksDbException {
         if (mongoDatabase == null) {
@@ -165,7 +201,13 @@ public class BooksDbImpl implements BooksDbInterface{
         }
     }
 
-
+    /**
+     * Updates the rating of a book in the MongoDB database.
+     *
+     * @param book      The Book object representing the book to be updated.
+     * @param newRating The new rating to be set for the book.
+     * @throws BooksDbException If there are issues with the database connection or the update operation.
+     */
     @Override
     public void updateBookRating(Book book, int newRating) throws BooksDbException {
         if (mongoDatabase == null) {
@@ -193,7 +235,13 @@ public class BooksDbImpl implements BooksDbInterface{
         }
     }
 
-
+    /**
+     * Searches for books in the MongoDB database by author name using a case-insensitive regex pattern.
+     *
+     * @param author The name of the author to search for.
+     * @return A list of Book objects authored by the specified author.
+     * @throws BooksDbException If there are issues with the database connection or the search operation.
+     */
     @Override
     public List<Book> searchBooksByAuthor(String author) throws BooksDbException {
         if (mongoDatabase == null) {
@@ -215,7 +263,13 @@ public class BooksDbImpl implements BooksDbInterface{
         return result;
     }
 
-
+    /**
+     * Searches for books in the MongoDB database by genre using a case-insensitive regex pattern.
+     *
+     * @param genre The genre to search for.
+     * @return A list of Book objects belonging to the specified genre.
+     * @throws BooksDbException If there are issues with the database connection or the search operation.
+     */
     @Override
     public List<Book> searchBooksByGenre(String genre) throws BooksDbException {
         if (mongoDatabase == null) {
@@ -237,7 +291,13 @@ public class BooksDbImpl implements BooksDbInterface{
         return result;
     }
 
-
+    /**
+     * Searches for books in the MongoDB database by title using a case-insensitive regex pattern.
+     *
+     * @param searchTitle The title to search for.
+     * @return A list of Book objects with titles matching the specified search title.
+     * @throws BooksDbException If there are issues with the database connection or the search operation.
+     */
     @Override
     public List<Book> searchBooksByTitle(String searchTitle) throws BooksDbException {
         if (mongoDatabase == null) {
@@ -259,7 +319,13 @@ public class BooksDbImpl implements BooksDbInterface{
     }
 
 
-
+    /**
+     * Searches for books in the MongoDB database by ISBN using a case-insensitive regex pattern.
+     *
+     * @param isbnString The ISBN to search for.
+     * @return A list of Book objects with ISBNs matching the specified search ISBN.
+     * @throws BooksDbException If there are issues with the database connection or the search operation.
+     */
     @Override
     public List<Book> searchBooksByISBN(String isbnString) throws BooksDbException {
         if (mongoDatabase == null) {
@@ -280,6 +346,12 @@ public class BooksDbImpl implements BooksDbInterface{
 
     }
 
+    /**
+     * Converts MongoDB documents representing books to a list of Book objects.
+     *
+     * @param result       The list to which Book objects will be added.
+     * @param foundBooks   The FindIterable<Document> containing MongoDB documents representing books.
+     */
     private void getBooksFromDb(List<Book> result, FindIterable<Document> foundBooks) {
         for (Document doc : foundBooks) {
             String bookId = doc.getString("bookId");
@@ -312,6 +384,13 @@ public class BooksDbImpl implements BooksDbInterface{
         }
     }
 
+    /**
+     * Searches for books with a specified rating in the MongoDB database.
+     *
+     * @param ratingString The string representation of the desired rating.
+     * @return A list of Book objects with the specified rating.
+     * @throws BooksDbException If there are issues with the database connection or the search operation.
+     */
     @Override
     public List<Book> searchBooksByRating(String ratingString) throws BooksDbException {
         if (mongoDatabase == null) {
@@ -336,7 +415,12 @@ public class BooksDbImpl implements BooksDbInterface{
         return result;
     }
 
-
+    /**
+     * Retrieves all authors from the MongoDB database.
+     *
+     * @return A list of Author objects representing all authors in the database.
+     * @throws BooksDbException If there are issues with the database connection or the retrieval operation.
+     */
     @Override
     public List<Author> getAllAuthors() throws BooksDbException {
         List<Author> authors = new ArrayList<>();
@@ -363,7 +447,12 @@ public class BooksDbImpl implements BooksDbInterface{
         return authors;
     }
 
-
+    /**
+     * Converts a Date object to a LocalDate object.
+     *
+     * @param dateToConvert The Date object to be converted.
+     * @return The LocalDate representation of the input Date.
+     */
     public LocalDate convertToLocalDateViaInstant(Date dateToConvert) { //convert Date to LocalDate, maybe need later
         return dateToConvert.toInstant()
                 .atZone(ZoneId.systemDefault())

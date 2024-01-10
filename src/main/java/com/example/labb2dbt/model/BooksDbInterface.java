@@ -56,7 +56,7 @@ public interface BooksDbInterface {
      * @throws BooksDbException If an error occurs while updating the book in the database.
      *
      */
-    void updateBook(Book book) throws BooksDbException;
+    void updateBook(String id, Book book) throws BooksDbException;
 
     /**
      * Deletes a book from the database based on its ID.

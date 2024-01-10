@@ -117,10 +117,10 @@ public class Controller {
         deleteThread.start();
     }
 
-    public void updateBook(Book book) throws BooksDbException {
+    public void updateBook(String isbn, Book book) throws BooksDbException {
         Runnable updateTask = () -> {
             try {
-                booksDb.updateBook(book);
+                booksDb.updateBook(isbn, book);
             } catch (BooksDbException e) {
                 handleException(e);
             }

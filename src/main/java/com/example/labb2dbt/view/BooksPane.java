@@ -531,7 +531,8 @@ public class BooksPane extends VBox {
         result.ifPresent(updatedBook -> {
             System.out.println("Sending updated book to controller: " + updatedBook);
             try {
-                controller.updateBook(updatedBook);
+                controller.updateBook(bookToUpdate.getIsbn(), updatedBook);
+                System.out.println(bookToUpdate.getIsbn());
             } catch (BooksDbException e) {
                 throw new RuntimeException(e);
             }

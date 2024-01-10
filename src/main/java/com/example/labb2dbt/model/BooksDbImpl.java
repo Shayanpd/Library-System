@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class BooksDbImpl implements BooksDbInterface{
     public MongoClient mongoClient;
@@ -108,9 +109,40 @@ public class BooksDbImpl implements BooksDbInterface{
 
 
     @Override
-    public void updateBook(Book book) throws BooksDbException {//TODO
+    public void updateBook(String isbn, Book book) throws BooksDbException {
+        if (mongoDatabase == null) {
+            throw new BooksDbException("Not connected to the database");
+        }
 
+        try {
+            // Create a filter to find the book by ISBN
+            Bson filter = Filters.eq("isbn", isbn);
+
+            // Create an update operation with the new values
+            Bson updateOperation = Updates.combine(
+                    Updates.set("title", book.getTitle()),
+                    Updates.set("isbn", book.getIsbn()),
+                    Updates.set("dateOfRelease", book.getPublished()),
+                    Updates.set("description", book.getStoryLine()),
+                    Updates.set("rating", book.getRating()),
+                    Updates.set("genres", book.getGenres().stream().map(genre -> new Document("name", genre.getGenreName())).collect(Collectors.toList())),
+                    Updates.set("authors", book.getAuthors().stream().map(author -> new Document("name", author.getName()).append("dateOfBirth", author.getBirthDate())).collect(Collectors.toList()))
+            );
+
+            // Perform the update
+            UpdateResult result = booksCollection.updateOne(filter, updateOperation);
+
+            if (result.getMatchedCount() == 0) {
+                throw new BooksDbException("No book found with ISBN: " + isbn);
+            }
+            if (result.getModifiedCount() == 0) {
+                throw new BooksDbException("Book not updated for ISBN: " + isbn);
+            }
+        } catch (MongoException e) {
+            throw new BooksDbException("Error updating book in MongoDB database", e);
+        }
     }
+
 
     @Override
     public void deleteBook(Book book) throws BooksDbException {

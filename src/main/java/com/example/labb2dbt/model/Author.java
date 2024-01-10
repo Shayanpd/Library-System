@@ -56,9 +56,9 @@ public class Author {
     }
 
     /**
-     * Gets the birth date of the author.
+     * Gets the birthdate of the author.
      *
-     * @return The birth date of the author.
+     * @return The birthdate of the author.
      */
     public LocalDate getBirthDate() {
         return birthDate;

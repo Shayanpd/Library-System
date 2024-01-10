@@ -89,9 +89,22 @@ public class BooksDbImpl implements BooksDbInterface{
     }
 
     @Override
-    public void addAuthor(Author author) throws BooksDbException {//TODO
+    public void addAuthor(Author author) throws BooksDbException {
+        if (mongoDatabase == null) {
+            throw new BooksDbException("Not connected to the database");
+        }
 
+        try {
+            Document authorDoc = new Document()
+                    .append("name", author.getName())
+                    .append("dateOfBirth", author.getBirthDate());
+
+            authorsCollection.insertOne(authorDoc);
+        } catch (MongoException e) {
+            throw new BooksDbException("Error adding author to MongoDB database", e);
+        }
     }
+
 
     @Override
     public void updateBook(Book book) throws BooksDbException {//TODO

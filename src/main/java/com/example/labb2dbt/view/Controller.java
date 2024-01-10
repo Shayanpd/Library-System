@@ -107,7 +107,7 @@ public class Controller {
     public void deleteBook(Book book) throws BooksDbException {
         Runnable deleteTask = () -> {
             try {
-                booksDb.deleteBook(book.getBookId());
+                booksDb.deleteBook(book);
             } catch (BooksDbException e) {
                 handleException(e);
             }

@@ -64,7 +64,7 @@ public interface BooksDbInterface {
      * @param bookId The ID of the book to be deleted.
      * @throws BooksDbException If an error occurs while deleting the book from the database.
      */
-    void deleteBook(int bookId) throws BooksDbException;
+    void deleteBook(Book book) throws BooksDbException;
 
     /**
      * Updates the rating of a book in the database.

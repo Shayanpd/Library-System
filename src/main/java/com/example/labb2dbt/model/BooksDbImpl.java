@@ -3,6 +3,7 @@ import com.mongodb.MongoException;
 import com.mongodb.client.*;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
+import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 import org.bson.Document;
 import org.bson.conversions.Bson;
@@ -71,17 +72,17 @@ public class BooksDbImpl implements BooksDbInterface{
             genreList.add(genreDoc);
         }
 
-        List<Author> authorList = new ArrayList<>();
+        List<Document> authorList = new ArrayList<>();
 
         for (Author a : book.getAuthors()){
             Document authorDoc = new Document();
             authorDoc.put("name", a.getName());
             authorDoc.put("dateOfBirth", a.getBirthDate());
-            authorList.add(a);
+            authorList.add(authorDoc);
         }
 
         doc.put("genres", genreList);
-        //doc.put("authors", book.getAuthors());
+        doc.put("authors", authorList);
 
         this.booksCollection.insertOne(doc);
 
@@ -112,9 +113,26 @@ public class BooksDbImpl implements BooksDbInterface{
     }
 
     @Override
-    public void deleteBook(int bookId) throws BooksDbException { //TODO
+    public void deleteBook(Book book) throws BooksDbException {
+        if (mongoDatabase == null) {
+            throw new BooksDbException("Not connected to the database");
+        }
+        String isbn = book.getIsbn();
+        try {
+            // Create a filter to find the book by ISBN
+            Bson filter = Filters.eq("isbn", isbn);
 
+            // Perform the deletion
+            DeleteResult result = booksCollection.deleteOne(filter);
+
+            if (result.getDeletedCount() == 0) {
+                throw new BooksDbException("No book found with ISBN: " + isbn);
+            }
+        } catch (MongoException e) {
+            throw new BooksDbException("Error deleting book from MongoDB database", e);
+        }
     }
+
 
     @Override
     public void updateBookRating(Book book, int newRating) throws BooksDbException {
@@ -288,17 +306,29 @@ public class BooksDbImpl implements BooksDbInterface{
 
 
     @Override
-    public List<Author> getAllAuthors() throws BooksDbException { //only gets the first author atm
-        Document doc = this.authorsCollection.find().first();
-        if (doc == null) System.out.println("doc is null");
-        String name = doc.getString("name");
-        Date dateOfBirth = doc.getDate("dateOfBirth");
-        LocalDate convertedDate = convertToLocalDateViaInstant(dateOfBirth);
+    public List<Author> getAllAuthors() throws BooksDbException {
+        List<Author> authors = new ArrayList<>();
+        try {
+            // Query all documents in the authors collection
+            FindIterable<Document> documents = authorsCollection.find();
 
-        Author a = new Author(name, convertedDate);
-        List<Author> result = new ArrayList<>();
-        result.add(a);
-        return result;
+            // Iterate over each document and convert it to an Author object
+            for (Document doc : documents) {
+                String name = doc.getString("name");
+                Date dateOfBirth = doc.getDate("dateOfBirth");
+
+                // Convert Date to LocalDate
+                LocalDate localDateOfBirth = convertToLocalDateViaInstant(dateOfBirth);
+
+                // Create a new Author object and add it to the list
+                Author author = new Author(name, localDateOfBirth);
+                authors.add(author);
+            }
+        } catch (MongoException e) {
+            throw new BooksDbException("Error retrieving authors from MongoDB database", e);
+        }
+
+        return authors;
     }
 
 

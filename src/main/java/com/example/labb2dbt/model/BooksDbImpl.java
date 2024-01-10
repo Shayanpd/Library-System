@@ -2,13 +2,17 @@ package com.example.labb2dbt.model;
 import com.mongodb.MongoException;
 import com.mongodb.client.*;
 import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.Updates;
+import com.mongodb.client.result.UpdateResult;
 import org.bson.Document;
+import org.bson.conversions.Bson;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.regex.Pattern;
 
 public class BooksDbImpl implements BooksDbInterface{
     public MongoClient mongoClient;
@@ -51,7 +55,7 @@ public class BooksDbImpl implements BooksDbInterface{
     }
 
     @Override
-    public void addBook(Book book) throws BooksDbException {
+    public void addBook(Book book) throws BooksDbException {//TODO: fix authors(does not work currently)
         Document doc = new Document();
         doc.put("title", book.getTitle());
         doc.put("isbn", book.getIsbn());
@@ -85,35 +89,91 @@ public class BooksDbImpl implements BooksDbInterface{
     }
 
     @Override
-    public void addAuthor(Author author) throws BooksDbException {
+    public void addAuthor(Author author) throws BooksDbException {//TODO
 
     }
 
     @Override
-    public void updateBook(Book book) throws BooksDbException {
+    public void updateBook(Book book) throws BooksDbException {//TODO
 
     }
 
     @Override
-    public void deleteBook(int bookId) throws BooksDbException {
+    public void deleteBook(int bookId) throws BooksDbException { //TODO
 
     }
 
     @Override
     public void updateBookRating(Book book, int newRating) throws BooksDbException {
+        if (mongoDatabase == null) {
+            throw new BooksDbException("Not connected to the database");
+        }
+        String isbn = book.getIsbn();
+        try {
+            // Create a filter to search for the book by ISBN
+            Bson filter = Filters.eq("isbn", isbn);
 
+            // Create an update operation to set the new rating
+            Bson updateOperation = Updates.set("rating", newRating);
+
+            // Perform the update
+            UpdateResult result = booksCollection.updateOne(filter, updateOperation);
+
+            if (result.getMatchedCount() == 0) {
+                throw new BooksDbException("No book found with ISBN: " + isbn);
+            }
+            if (result.getModifiedCount() == 0) {
+                throw new BooksDbException("Book rating not updated for ISBN: " + isbn);
+            }
+        } catch (MongoException e) {
+            throw new BooksDbException("Error updating book rating in MongoDB database", e);
+        }
     }
 
 
     @Override
     public List<Book> searchBooksByAuthor(String author) throws BooksDbException {
-        return null;
+        if (mongoDatabase == null) {
+            throw new BooksDbException("Not connected to the database");
+        }
+        List<Book> result = new ArrayList<>();
+
+        try {
+            // Using regex to perform a case-insensitive search for the author
+            Pattern pattern = Pattern.compile(author, Pattern.CASE_INSENSITIVE);
+            Bson filter = Filters.elemMatch("authors", Filters.regex("name", pattern));
+
+            FindIterable<Document> foundBooks = booksCollection.find(filter);
+            getBooksFromDb(result, foundBooks);
+        } catch (MongoException e) {
+            throw new BooksDbException("Error searching books by Author", e);
+        }
+
+        return result;
     }
+
 
     @Override
     public List<Book> searchBooksByGenre(String genre) throws BooksDbException {
-        return null;
+        if (mongoDatabase == null) {
+            throw new BooksDbException("Not connected to the database");
+        }
+        List<Book> result = new ArrayList<>();
+
+        try {
+            // Using regex to perform a case-insensitive partial search for the genre
+            Pattern pattern = Pattern.compile(genre, Pattern.CASE_INSENSITIVE);
+            Bson filter = Filters.elemMatch("genres", Filters.regex("name", pattern));
+
+            FindIterable<Document> foundBooks = booksCollection.find(filter);
+            getBooksFromDb(result, foundBooks);
+        } catch (MongoException e) {
+            throw new BooksDbException("Error searching books by genre", e);
+        }
+
+        return result;
     }
+
 
     @Override
     public List<Book> searchBooksByTitle(String searchTitle) throws BooksDbException {
@@ -159,6 +219,7 @@ public class BooksDbImpl implements BooksDbInterface{
 
     private void getBooksFromDb(List<Book> result, FindIterable<Document> foundBooks) {
         for (Document doc : foundBooks) {
+            String bookId = doc.getString("bookId");
             String title = doc.getString("title");
             String isbn = doc.getString("isbn");
             Date dateOfRelease = doc.getDate("dateOfRelease");
@@ -212,10 +273,6 @@ public class BooksDbImpl implements BooksDbInterface{
         return result;
     }
 
-    @Override
-    public void deleteAuthor(int authorId) throws BooksDbException {
-
-    }
 
     @Override
     public List<Author> getAllAuthors() throws BooksDbException { //only gets the first author atm
@@ -231,10 +288,7 @@ public class BooksDbImpl implements BooksDbInterface{
         return result;
     }
 
-    @Override
-    public List<Genre> getAllGenres() throws BooksDbException {
-        return null;
-    }
+
     public LocalDate convertToLocalDateViaInstant(Date dateToConvert) { //convert Date to LocalDate, maybe need later
         return dateToConvert.toInstant()
                 .atZone(ZoneId.systemDefault())

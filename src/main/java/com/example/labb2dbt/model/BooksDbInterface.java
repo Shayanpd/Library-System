@@ -122,29 +122,11 @@ public interface BooksDbInterface {
      */
     List<Book> searchBooksByRating(String rating) throws BooksDbException;
 
-
-    /**
-     * Deletes an author from the database based on the author ID.
-     * @param authorId The ID of the author to be deleted.
-     * @throws BooksDbException If there is an issue with the database operation.
-     */
-    void deleteAuthor(int authorId) throws BooksDbException;
-
     /**
      * Retrieves all authors from the database.
      * @return A list of authors.
      * @throws BooksDbException If there is an issue with the database operation.
      */
     List<Author> getAllAuthors() throws BooksDbException;
-
-    /**
-     * Retrieves a list of all genres from the database.
-     *
-     * @return A list of Genre objects representing all genres in the database.
-     * @throws BooksDbException If an error occurs while retrieving genres from the database.
-     *                         This may include SQL exceptions or other issues related to database access.
-     * @see Genre
-     */
-    List<Genre> getAllGenres() throws BooksDbException;
 
 }
